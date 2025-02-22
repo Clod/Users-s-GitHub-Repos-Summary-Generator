@@ -17,6 +17,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Generate a portfolio report from GitHub repositories.")
 parser.add_argument("--username", required=True, help="GitHub username")
 parser.add_argument("--token", required=True, help="GitHub access token")
+parser.add_argument("--dry-run", action="store_true", help="Run in dry-run mode without writing to Portfolio.md")
 args = parser.parse_args()
 
 username = args.username
@@ -65,9 +66,6 @@ def correct_github_readme_image_links_extended(repo_readme, github_username, rep
         )
 
     return corrected_readme
-
-# Add dry run argument
-parser.add_argument("--dry-run", action="store_true", help="Run in dry-run mode without writing to Portfolio.md")
 
 # If not dry run and Portfolio.md exists, rename it
 if not args.dry_run and os.path.exists("Portfolio.md"):
