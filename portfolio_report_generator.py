@@ -31,6 +31,18 @@ def get_github_headers(access_token):
         'Accept': 'application/vnd.github.v3+json'
     }
     logging.debug(f"Generated headers with token: {access_token[:4]}...{access_token[-4:]}")
+    
+    # Verify token permissions
+    try:
+        auth_url = "https://api.github.com/user"
+        response = requests.get(auth_url, headers=headers)
+        response.raise_for_status()
+        user_data = response.json()
+        logging.debug(f"Token authenticated as: {user_data.get('login')}")
+        logging.debug(f"Token permissions: {user_data.get('permissions')}")
+    except Exception as e:
+        logging.error(f"Failed to verify token permissions: {e}")
+    
     return headers
 
 def correct_github_readme_image_links_extended(repo_readme, github_username, repo_name, branch="main"):
@@ -203,6 +215,11 @@ def main():
     # Verify token format
     if not args.token.startswith('ghp_'):
         logging.error("Invalid GitHub token format. Token should start with 'ghp_'")
+        return
+    
+    # Verify token length
+    if len(args.token) != 40:
+        logging.error("Invalid GitHub token length. Token should be 40 characters long")
         return
     
     default_branch = get_branch_selection()
