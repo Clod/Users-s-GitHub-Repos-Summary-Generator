@@ -26,10 +26,12 @@ def parse_arguments():
 
 def get_github_headers(access_token):
     """Generate headers for GitHub API requests"""
-    return {
+    headers = {
         'Authorization': f'token {access_token}',
         'Accept': 'application/vnd.github.v3+json'
     }
+    logging.debug(f"Generated headers with token: {access_token[:4]}...{access_token[-4:]}")
+    return headers
 
 def correct_github_readme_image_links_extended(repo_readme, github_username, repo_name, branch="main"):
     """
@@ -103,7 +105,11 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
             repos_response.raise_for_status()
             
             if repos_response.status_code == 401:  # Unauthorized
-                logging.error("Invalid GitHub access token. Please check your token and try again.")
+                logging.error("Invalid GitHub access token. Please check:")
+                logging.error("1. The token is correct and hasn't expired")
+                logging.error("2. The token has the 'repo' scope enabled")
+                logging.error("3. The token is properly formatted (should start with 'ghp_')")
+                logging.error(f"Token used: {access_token[:4]}...{access_token[-4:]}")
                 return
                 
             repos = repos_response.json()
@@ -193,6 +199,11 @@ def main():
     """Main function to execute the portfolio generation"""
     setup_logging()
     args = parse_arguments()
+    
+    # Verify token format
+    if not args.token.startswith('ghp_'):
+        logging.error("Invalid GitHub token format. Token should start with 'ghp_'")
+        return
     
     default_branch = get_branch_selection()
     portfolio_file = setup_output_file(args.dry_run)
