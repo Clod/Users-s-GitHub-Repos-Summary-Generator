@@ -129,8 +129,15 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
             # Debug logging for repository info
             logging.debug(f"Processing repo: {repo['name']} - Private: {repo['private']} - Fork: {repo['fork']}")
             
+            # Debug logging for repository info
+            logging.debug(f"Processing repo: {repo['name']} - Private: {repo['private']} - Fork: {repo['fork']} - Archived: {repo.get('archived', False)}")
+            
             if repo['private']:
                 logging.info(f"Skipping private repository: {repo['name']}")
+                continue
+                
+            if repo.get('archived', False):
+                logging.info(f"Skipping archived repository: {repo['name']}")
                 continue
                 
             processed_repos += 1
@@ -152,12 +159,16 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
 
 def process_repository(username, repo_name, headers, portfolio_file, default_branch=None):
     """Process a single repository"""
+    logging.debug(f"Attempting to process repository: {repo_name}")
     readme_url = f"https://api.github.com/repos/{username}/{repo_name}/readme"
+    logging.debug(f"README URL: {readme_url}")
     
     try:
         readme_response = requests.get(readme_url, headers=headers)
+        logging.debug(f"README response status: {readme_response.status_code}")
         readme_response.raise_for_status()
         readme_data = readme_response.json()
+        logging.debug(f"README data retrieved successfully for {repo_name}")
         
         encoded_content = readme_data['content']
         readme_content = base64.b64decode(encoded_content).decode('utf-8')
