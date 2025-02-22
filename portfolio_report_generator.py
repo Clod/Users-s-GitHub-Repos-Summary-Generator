@@ -1,6 +1,7 @@
 import requests
 import base64, os, re
 import logging
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
@@ -67,15 +68,28 @@ def correct_github_readme_image_links_extended(repo_readme, github_username, rep
 
     return corrected_readme
 
-# If not dry run and Portfolio.md exists, rename it
-if not args.dry_run and os.path.exists("Portfolio.md"):
-    os.rename("Portfolio.md", "Portfolio_old.md")
+# Ask about branch selection
+branch_mode = input("Use 'main' branch for all repositories? (y/n): ").lower()
+if branch_mode == 'y':
+    branch = "main"
+    print("Using 'main' branch for all repositories")
+else:
+    print("You'll be prompted for branch for each repository")
+
+# Create timestamped filename
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+output_filename = f"Portfolio_{timestamp}.md"
+
+# If not dry run and output file exists, rename it
+if not args.dry_run and os.path.exists(output_filename):
+    os.rename(output_filename, f"Portfolio_old_{timestamp}.md")
 
 if args.dry_run:
-    print("Running in dry-run mode. No changes will be written to Portfolio.md.")
+    print("Running in dry-run mode. No changes will be written to file.")
     portfolio_file = open(os.devnull, 'w')  # Write to null device
 else:
-    portfolio_file = open("Portfolio.md", "w+")
+    portfolio_file = open(output_filename, "w+")
+    print(f"Writing output to {output_filename}")
     try:
         # Fetch the list of repositories
         repos_response = requests.get(repos_url, headers=headers, timeout=10)
@@ -118,7 +132,8 @@ else:
                     print("README.md content:\n")
                     # print(readme_content)
                     # portfolio_file.write(f'\n{readme_content}\n')
-                    branch = input(f"Enter branch name for {repo_name} (default: main): ") or "main"
+                    if branch_mode != 'y':
+                        branch = input(f"Enter branch name for {repo_name} (default: main): ") or "main"
                     readme_content_images = correct_github_readme_image_links_extended(readme_content, username, repo_name, branch)
                     portfolio_file.write(f'\n{readme_content_images}\n')
                 except requests.exceptions.HTTPError as http_err:
