@@ -207,6 +207,7 @@ def process_repository(username, repo_name, headers, portfolio_file, default_bra
         readme_content_images = correct_github_readme_image_links_extended(
             readme_content, username, repo_name, branch)
         portfolio_file.write(f'\n{readme_content_images}\n')
+        portfolio_file.write('\n---\n\n')  # Add thick horizontal line between repos
         
     except requests.exceptions.HTTPError as http_err:
         if readme_response.status_code == 404:
