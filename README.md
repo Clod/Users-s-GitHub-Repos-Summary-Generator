@@ -19,14 +19,6 @@ python portfolio_report_generator.py --username YOUR_GITHUB_USERNAME --token YOU
 - Python 3.x
 - requests library
 
-## Configuration
-Create a `config.ini` file with your GitHub credentials:
-
-```ini
-[GITHUB]
-username = your_username
-token = your_token
-```
 
 ## Logging
-All operations are logged to `portfolio_generator.log`.
+All operations are logged to `portfolio_generator_<timestamp>.log`.
