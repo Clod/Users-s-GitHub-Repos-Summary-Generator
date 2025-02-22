@@ -9,7 +9,7 @@ from datetime import datetime
 def setup_logging():
     """Configure logging for the application"""
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,  # Changed to DEBUG for more detailed logging
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler("portfolio_generator.log"),
@@ -93,16 +93,30 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
     """Process all repositories for the given user"""
     headers = get_github_headers(access_token)
     repos_url = f"https://api.github.com/users/{username}/repos"
+    all_repos = []
+    page = 1
     
     try:
-        repos_response = requests.get(repos_url, headers=headers, timeout=10)
-        repos_response.raise_for_status()
-        
-        if repos_response.status_code == 401:  # Unauthorized
-            logging.error("Invalid GitHub access token. Please check your token and try again.")
-            return
-        
-        repos = repos_response.json()
+        while True:
+            params = {'page': page, 'per_page': 100}
+            repos_response = requests.get(repos_url, headers=headers, params=params, timeout=10)
+            repos_response.raise_for_status()
+            
+            if repos_response.status_code == 401:  # Unauthorized
+                logging.error("Invalid GitHub access token. Please check your token and try again.")
+                return
+                
+            repos = repos_response.json()
+            if not repos:
+                break
+                
+            all_repos.extend(repos)
+            page += 1
+            
+            # Debug logging
+            logging.debug(f"Fetched page {page-1} with {len(repos)} repositories")
+            
+        repos = all_repos
         
         if not repos:
             logging.info(f"No public repositories found for user '{username}'.")
@@ -112,6 +126,9 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
         processed_repos = 0
         
         for repo in repos:
+            # Debug logging for repository info
+            logging.debug(f"Processing repo: {repo['name']} - Private: {repo['private']} - Fork: {repo['fork']}")
+            
             if repo['private']:
                 logging.info(f"Skipping private repository: {repo['name']}")
                 continue
