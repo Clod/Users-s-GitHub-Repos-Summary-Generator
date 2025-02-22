@@ -6,16 +6,18 @@ import logging
 import argparse
 from datetime import datetime
 
-def setup_logging():
-    """Configure logging for the application"""
+def setup_logging(timestamp):
+    """Configure logging for the application with timestamped log file"""
+    log_filename = f"portfolio_generator_{timestamp}.log"
     logging.basicConfig(
-        level=logging.DEBUG,  # Changed to DEBUG for more detailed logging
+        level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler("portfolio_generator.log"),
+            logging.FileHandler(log_filename),
             logging.StreamHandler()
         ]
     )
+    logging.info(f"Starting new portfolio generation with timestamp: {timestamp}")
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description="Generate a portfolio report from GitHub repositories.")
@@ -110,6 +112,9 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
     all_repos = []
     page = 1
     
+    # Log all repository URLs
+    logging.info("Repository URLs:")
+    
     try:
         while True:
             params = {'page': page, 'per_page': 100}
@@ -131,7 +136,11 @@ def process_repositories(username, access_token, portfolio_file, default_branch=
             all_repos.extend(repos)
             page += 1
             
-            # Debug logging
+            # Log repository URLs with numbers
+            for i, repo in enumerate(repos, start=1):
+                repo_url = repo['html_url']
+                logging.info(f"{i}. {repo_url}")
+            
             logging.debug(f"Fetched page {page-1} with {len(repos)} repositories")
             
         repos = all_repos
@@ -209,7 +218,8 @@ def process_repository(username, repo_name, headers, portfolio_file, default_bra
 
 def main():
     """Main function to execute the portfolio generation"""
-    setup_logging()
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    setup_logging(timestamp)
     args = parse_arguments()
     
     # Verify token format

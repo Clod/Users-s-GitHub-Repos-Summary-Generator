@@ -2,3 +2,5 @@ github_token.txt
 .DS_Store
 generador/
 Portfolio*.md
+*.log
+.aider*
